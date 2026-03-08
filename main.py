@@ -1573,3 +1573,103 @@ def cmd_list_rounds(config: AmiConfig, args: argparse.Namespace) -> int:
     if limit <= 0:
         print("[]")
         return 0
+    rounds_list = list_rounds_range(config.contract_address or "", config.rpc_url, start, start + limit - 1)
+    print(json.dumps(rounds_list, indent=2))
+    return 0
+
+
+def cmd_config_show(config: AmiConfig, args: argparse.Namespace) -> int:
+    d = config_get_all(getattr(args, "config", None))
+    print(json.dumps(d, indent=2))
+    return 0
+
+
+def cmd_config_set_rpc(config: AmiConfig, args: argparse.Namespace) -> int:
+    path = getattr(args, "config", None) or AMI_CONFIG_FILE
+    rpc = getattr(args, "rpc_url", None) or getattr(args, "rpc", None)
+    if not rpc:
+        print("Missing --rpc or rpc_url", file=sys.stderr)
+        return 1
+    config_set_rpc(path, rpc)
+    print("RPC URL updated.")
+    return 0
+
+
+def cmd_config_set_contract(config: AmiConfig, args: argparse.Namespace) -> int:
+    path = getattr(args, "config", None) or AMI_CONFIG_FILE
+    addr = getattr(args, "contract_address", None) or getattr(args, "address", None)
+    if not addr:
+        print("Missing --contract or address", file=sys.stderr)
+        return 1
+    if not AmiValidation.is_valid_address(addr):
+        print("Invalid address", file=sys.stderr)
+        return 1
+    config_set_contract(path, addr)
+    print("Contract address updated.")
+    return 0
+
+
+def cmd_validate_address(config: AmiConfig, args: argparse.Namespace) -> int:
+    addr = getattr(args, "address", None)
+    if not addr:
+        print("Usage: ami validate-address <0x...>", file=sys.stderr)
+        return 1
+    if AmiValidation.is_valid_address(addr):
+        print("Valid address.")
+        try:
+            print("EIP-55:", to_checksum_address(addr))
+        except Exception as e:
+            print("Checksum error:", e, file=sys.stderr)
+        return 0
+    print("Invalid address.", file=sys.stderr)
+    return 1
+
+
+def cmd_compute_deadline(config: AmiConfig, args: argparse.Namespace) -> int:
+    minutes = getattr(args, "minutes", 30)
+    ts = AmiTime.deadline_from_now_min(minutes)
+    print(ts)
+    return 0
+
+
+def cmd_compute_slippage_min(config: AmiConfig, args: argparse.Namespace) -> int:
+    amount_out = getattr(args, "amount_out", 0)
+    slippage_bps = getattr(args, "slippage_bps", AMI_DEFAULT_SLIPPAGE_BPS)
+    if amount_out < 0 or slippage_bps < 0 or slippage_bps > AMI_BPS_BASE:
+        print("Invalid amount or slippage_bps", file=sys.stderr)
+        return 1
+    min_out = AmiMath.slippage_min_out(amount_out, slippage_bps)
+    print(min_out)
+    return 0
+
+
+def cmd_ether_to_wei(config: AmiConfig, args: argparse.Namespace) -> int:
+    eth = getattr(args, "eth", 0.0)
+    print(ether_to_wei(eth))
+    return 0
+
+
+def cmd_wei_to_ether(config: AmiConfig, args: argparse.Namespace) -> int:
+    wei = getattr(args, "wei", 0)
+    print(wei_to_ether(wei))
+    return 0
+
+
+def get_abi() -> List[Dict[str, Any]]:
+    """Return the Anna contract ABI used by Ami (for external tooling)."""
+    return list(ANNA_ABI)
+
+
+def get_default_rpc_for_chain(chain_id: int) -> str:
+    """Return a default public RPC URL for the given chain ID."""
+    if chain_id == AMI_CHAIN_ID_MAINNET:
+        return "https://eth.llamarpc.com"
+    if chain_id == AMI_CHAIN_ID_SEPOLIA:
+        return "https://rpc.sepolia.org"
+    if chain_id == AMI_CHAIN_ID_BASE:
+        return "https://mainnet.base.org"
+    return AMI_DEFAULT_RPC
+
+
+if __name__ == "__main__":
+    sys.exit(main())
