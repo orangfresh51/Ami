@@ -628,3 +628,108 @@ def format_address(addr: str) -> str:
         return addr[:10] + "..." + addr[-8:]
     return addr
 
+
+# -----------------------------------------------------------------------------
+# CLI commands
+# -----------------------------------------------------------------------------
+
+
+def cmd_status(config: AmiConfig, _args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        print("Not connected to RPC. Set rpc_url and contract_address in config.")
+        return 1
+    print("Chain ID:", client.get_chain_id())
+    print("Contract:", config.contract_address or "not set")
+    print("Claw paused:", client.get_claw_paused())
+    print("Order count:", client.get_order_count())
+    print("Position count:", client.contract.functions.positionCounter().call() if client.contract else 0)
+    print("Total staked:", format_wei(client.get_total_staked_wei()))
+    print("Contract balance:", format_wei(client.get_contract_balance()))
+    print("Vault balance:", format_wei(client.get_vault_balance()))
+    return 0
+
+
+def cmd_order_count(config: AmiConfig, _args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        print(0)
+        return 1
+    print(client.get_order_count())
+    return 0
+
+
+def cmd_get_order(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        return 1
+    o = client.get_order(args.order_id)
+    if o is None:
+        print("Order not found or error.")
+        return 1
+    print(json.dumps({k: str(v) for k, v in o.items()}, indent=2))
+    return 0
+
+
+def cmd_get_position(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        return 1
+    p = client.get_position(args.position_id)
+    if p is None:
+        print("Position not found or error.")
+        return 1
+    print(json.dumps({k: str(v) for k, v in p.items()}, indent=2))
+    return 0
+
+
+def cmd_get_strategy(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        return 1
+    s = client.get_strategy(args.strategy_id)
+    if s is None:
+        print("Strategy not found or error.")
+        return 1
+    print(json.dumps({k: str(v) for k, v in s.items()}, indent=2))
+    return 0
+
+
+def cmd_get_round(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        return 1
+    r = client.get_round(args.round_id)
+    if r is None:
+        print("Round not found or error.")
+        return 1
+    print(json.dumps(r, indent=2))
+    return 0
+
+
+def cmd_deposit_stake(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
+    value_wei = ether_to_wei(args.amount)
+    if client.deposit_stake(value_wei):
+        print("Deposit stake tx sent.")
+        return 0
+    return 1
+
+
+def cmd_request_withdraw(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
+    value_wei = ether_to_wei(args.amount)
+    if client.request_withdraw_stake(value_wei):
+        print("Withdraw request tx sent.")
+        return 0
+    return 1
+
+
+def cmd_top_treasury(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
