@@ -313,3 +313,108 @@ class AmiContractClient:
         return self._w3
 
     @property
+    def contract(self) -> Any:
+        return self._contract
+
+    @property
+    def account(self) -> Any:
+        return self._account
+
+    def get_chain_id(self) -> int:
+        if self._w3:
+            return self._w3.eth.chain_id
+        return self.config.chain_id
+
+    def get_order_count(self) -> int:
+        if not self._contract:
+            return 0
+        return self._contract.functions.getOrderCount().call()
+
+    def get_order(self, order_id: int) -> Optional[Dict[str, Any]]:
+        if not self._contract:
+            return None
+        try:
+            t = self._contract.functions.getOrder(order_id).call()
+            return {
+                "tokenIn": t[0],
+                "tokenOut": t[1],
+                "amountIn": t[2],
+                "amountOutMin": t[3],
+                "deadline": t[4],
+                "filled": t[5],
+                "cancelled": t[6],
+                "placedAtBlock": t[7],
+            }
+        except Exception:
+            return None
+
+    def get_position(self, position_id: int) -> Optional[Dict[str, Any]]:
+        if not self._contract:
+            return None
+        try:
+            t = self._contract.functions.getPosition(position_id).call()
+            return {
+                "user": t[0],
+                "strategyId": t[1],
+                "sizeWei": t[2],
+                "openedAtBlock": t[3],
+                "entryPriceE8": t[4],
+                "closed": t[5],
+                "realisedWei": t[6],
+            }
+        except Exception:
+            return None
+
+    def get_strategy(self, strategy_id: int) -> Optional[Dict[str, Any]]:
+        if not self._contract:
+            return None
+        try:
+            t = self._contract.functions.getStrategy(strategy_id).call()
+            return {
+                "allocCapWei": t[0],
+                "allocUsedWei": t[1],
+                "tickEpoch": t[2],
+                "lastTickBlock": t[3],
+                "sealed": t[4],
+                "active": t[5],
+                "confidenceTier": t[6],
+            }
+        except Exception:
+            return None
+
+    def get_round(self, round_id: int) -> Optional[Dict[str, Any]]:
+        if not self._contract:
+            return None
+        try:
+            t = self._contract.functions.getRound(round_id).call()
+            return {
+                "promptDigest": t[0].hex() if hasattr(t[0], "hex") else t[0],
+                "responseRoot": t[1].hex() if hasattr(t[1], "hex") else t[1],
+                "startedAt": t[2],
+                "sealedAt": t[3],
+                "finalized": t[4],
+                "confidenceTier": t[5],
+                "proposer": t[6],
+            }
+        except Exception:
+            return None
+
+    def get_total_staked_wei(self) -> int:
+        if not self._contract:
+            return 0
+        return self._contract.functions.getTotalStakedWei().call()
+
+    def get_user_stake_wei(self, address: str) -> int:
+        if not self._contract:
+            return 0
+        addr = Web3.to_checksum_address(address) if HAS_WEB3 else address
+        return self._contract.functions.getUserStakeWei(addr).call()
+
+    def get_contract_balance(self) -> int:
+        if not self._contract:
+            return 0
+        return self._contract.functions.getContractBalance().call()
+
+    def get_vault_balance(self) -> int:
+        if not self._contract:
+            return 0
