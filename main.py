@@ -1153,3 +1153,108 @@ def encode_order_params(token_in: str, token_out: str, amount_in: int, amount_ou
         struct.pack(">Q", amount_in & ((1 << 64) - 1)),
         struct.pack(">Q", amount_out_min & ((1 << 64) - 1)),
         struct.pack(">Q", deadline & ((1 << 64) - 1)),
+    ])
+
+
+def hash_order_params(token_in: str, token_out: str, amount_in: int, amount_out_min: int, deadline: int) -> str:
+    data = encode_order_params(token_in, token_out, amount_in, amount_out_min, deadline)
+    return AMI_HEX_PREFIX + _keccak256_hex(data)
+
+
+def list_orders_range(contract_address: str, rpc_url: str, start_id: int, end_id: int) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return out
+    for oid in range(start_id, end_id + 1):
+        o = client.get_order(oid)
+        if o:
+            o["orderId"] = oid
+            out.append(o)
+    return out
+
+
+def list_positions_range(contract_address: str, rpc_url: str, start_id: int, end_id: int) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return out
+    for pid in range(start_id, end_id + 1):
+        p = client.get_position(pid)
+        if p and p.get("openedAtBlock", 0) != 0:
+            p["positionId"] = pid
+            out.append(p)
+    return out
+
+
+def list_strategies_range(contract_address: str, rpc_url: str, start_id: int, end_id: int) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return out
+    for sid in range(start_id, end_id + 1):
+        s = client.get_strategy(sid)
+        if s and s.get("lastTickBlock", 0) != 0:
+            s["strategyId"] = sid
+            out.append(s)
+    return out
+
+
+def list_rounds_range(contract_address: str, rpc_url: str, start_id: int, end_id: int) -> List[Dict[str, Any]]:
+    out: List[Dict[str, Any]] = []
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return out
+    for rid in range(start_id, end_id + 1):
+        r = client.get_round(rid)
+        if r and r.get("startedAt", 0) != 0:
+            r["roundId"] = rid
+            out.append(r)
+    return out
+
+
+def format_order(o: Dict[str, Any]) -> str:
+    return (
+        f"Order tokenIn={o.get('tokenIn','')} tokenOut={o.get('tokenOut','')} "
+        f"amountIn={o.get('amountIn',0)} amountOutMin={o.get('amountOutMin',0)} "
+        f"deadline={o.get('deadline',0)} filled={o.get('filled',False)} cancelled={o.get('cancelled',False)}"
+    )
+
+
+def format_position(p: Dict[str, Any]) -> str:
+    return (
+        f"Position user={p.get('user','')} strategyId={p.get('strategyId',0)} sizeWei={p.get('sizeWei',0)} "
+        f"openedAtBlock={p.get('openedAtBlock',0)} closed={p.get('closed',False)} realisedWei={p.get('realisedWei',0)}"
+    )
+
+
+def format_strategy(s: Dict[str, Any]) -> str:
+    return (
+        f"Strategy allocCapWei={s.get('allocCapWei',0)} allocUsedWei={s.get('allocUsedWei',0)} "
+        f"tickEpoch={s.get('tickEpoch',0)} sealed={s.get('sealed',False)} active={s.get('active',False)}"
+    )
+
+
+def format_round(r: Dict[str, Any]) -> str:
+    return (
+        f"Round promptDigest={r.get('promptDigest','')} responseRoot={r.get('responseRoot','')} "
+        f"startedAt={r.get('startedAt',0)} sealedAt={r.get('sealedAt',0)} finalized={r.get('finalized',False)} "
+        f"proposer={r.get('proposer','')}"
+    )
+
+
+def parse_wei(s: str) -> int:
+    """Parse wei from string (decimal or hex)."""
+    s = s.strip()
+    if s.startswith("0x"):
+        return int(s, 16)
+    return int(s)
+
+
+def parse_ether(s: str) -> int:
+    """Parse ETH amount string to wei."""
+    return ether_to_wei(float(s))
