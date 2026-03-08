@@ -418,3 +418,108 @@ class AmiContractClient:
     def get_vault_balance(self) -> int:
         if not self._contract:
             return 0
+        return self._contract.functions.getVaultBalance().call()
+
+    def get_claw_paused(self) -> bool:
+        if not self._contract:
+            return True
+        return self._contract.functions.clawPaused().call()
+
+    def place_order(
+        self,
+        token_in: str,
+        token_out: str,
+        amount_in: int,
+        amount_out_min: int,
+        deadline: int,
+    ) -> Optional[int]:
+        if not self._contract or not self._account:
+            return None
+        try:
+            tx = self._contract.functions.placeOrder(
+                Web3.to_checksum_address(token_in),
+                Web3.to_checksum_address(token_out),
+                amount_in,
+                amount_out_min,
+                deadline,
+            ).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            if self.config.max_fee_per_gas_gwei is not None:
+                tx["maxFeePerGas"] = Web3.to_wei(self.config.max_fee_per_gas_gwei, "gwei")
+            if self.config.max_priority_fee_gwei is not None:
+                tx["maxPriorityFeePerGas"] = Web3.to_wei(self.config.max_priority_fee_gwei, "gwei")
+            signed = self._account.sign_transaction(tx)
+            tx_hash = self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash)
+            logs = self._contract.events.OrderQueued().process_receipt(receipt)
+            if logs:
+                return logs[0]["args"]["orderId"]
+            return None
+        except Exception as e:
+            get_logger().exception("placeOrder failed: %s", e)
+            return None
+
+    def execute_order(self, order_id: int) -> Optional[int]:
+        if not self._contract or not self._account:
+            return None
+        try:
+            tx = self._contract.functions.executeOrder(order_id).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            tx_hash = self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash)
+            logs = self._contract.events.OrderFilled().process_receipt(receipt)
+            if logs:
+                return logs[0]["args"]["amountOut"]
+            return None
+        except Exception as e:
+            get_logger().exception("executeOrder failed: %s", e)
+            return None
+
+    def cancel_order(self, order_id: int) -> bool:
+        if not self._contract or not self._account:
+            return False
+        try:
+            tx = self._contract.functions.cancelOrder(order_id).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            return True
+        except Exception as e:
+            get_logger().exception("cancelOrder failed: %s", e)
+            return False
+
+    def top_treasury(self, value_wei: int) -> bool:
+        if not self._contract or not self._account:
+            return False
+        try:
+            tx = self._contract.functions.topTreasury().build_transaction({
+                "from": self._account.address,
+                "value": value_wei,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            return True
+        except Exception as e:
+            get_logger().exception("topTreasury failed: %s", e)
+            return False
+
+    def deposit_stake(self, value_wei: int) -> bool:
+        if not self._contract or not self._account:
+            return False
+        try:
+            tx = self._contract.functions.depositStake().build_transaction({
+                "from": self._account.address,
+                "value": value_wei,
+                "gas": self.config.gas_limit,
