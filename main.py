@@ -208,3 +208,108 @@ class AmiConfig:
 ANNA_ABI = [
     {"inputs": [], "stateMutability": "nonpayable", "type": "constructor"},
     {"inputs": [], "name": "Anna_ClawDenied", "type": "error"},
+    {"inputs": [], "name": "Anna_AllocOverflow", "type": "error"},
+    {"inputs": [], "name": "Anna_VaultSweepFailed", "type": "error"},
+    {"inputs": [], "name": "Anna_ZeroAmount", "type": "error"},
+    {"inputs": [], "name": "Anna_ZeroAddress", "type": "error"},
+    {"inputs": [], "name": "Anna_TransferReverted", "type": "error"},
+    {"inputs": [], "name": "Anna_RouterReverted", "type": "error"},
+    {"inputs": [], "name": "Anna_ClawPaused", "type": "error"},
+    {"inputs": [], "name": "Anna_OrderMissing", "type": "error"},
+    {"inputs": [], "name": "Anna_OrderAlreadySettled", "type": "error"},
+    {"inputs": [], "name": "Anna_OrderCancelled", "type": "error"},
+    {"inputs": [], "name": "Anna_VaultInsufficient", "type": "error"},
+    {"inputs": [], "name": "Anna_DeadlinePassed", "type": "error"},
+    {"inputs": [], "name": "Anna_NotOperator", "type": "error"},
+    {"inputs": [], "name": "Anna_NotGovernor", "type": "error"},
+    {"inputs": [], "name": "Anna_NotTreasury", "type": "error"},
+    {"inputs": [], "name": "Anna_Reentrant", "type": "error"},
+    {"inputs": [], "name": "Anna_InvalidStrategyId", "type": "error"},
+    {"inputs": [], "name": "Anna_StrategySealed", "type": "error"},
+    {"inputs": [], "name": "Anna_WithdrawOverCap", "type": "error"},
+    {"inputs": [], "name": "Anna_PositionNotFound", "type": "error"},
+    {"inputs": [], "name": "Anna_InvalidRoundId", "type": "error"},
+    {"inputs": [], "name": "Anna_RoundNotSealed", "type": "error"},
+    {"inputs": [], "name": "Anna_PathLengthInvalid", "type": "error"},
+    {"inputs": [], "name": "Anna_InvalidBps", "type": "error"},
+    {"inputs": [{"name": "allocId", "type": "uint256"}, {"name": "beneficiary", "type": "address"}, {"name": "amountWei", "type": "uint256"}, {"name": "strategyId", "type": "uint256"}, {"name": "atBlock", "type": "uint40"}], "name": "ClawAllocation", "type": "event"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}, {"name": "tokenIn", "type": "address"}, {"name": "tokenOut", "type": "address"}, {"name": "amountIn", "type": "uint256"}, {"name": "amountOutMin", "type": "uint256"}, {"name": "deadline", "type": "uint256"}], "name": "OrderQueued", "type": "event"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}, {"name": "amountOut", "type": "uint256"}, {"name": "filledAtBlock", "type": "uint256"}], "name": "OrderFilled", "type": "event"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}, {"name": "atBlock", "type": "uint256"}], "name": "OrderCancelled", "type": "event"},
+    {"inputs": [{"name": "from", "type": "address"}, {"name": "amountWei", "type": "uint256"}], "name": "TreasuryTopped", "type": "event"},
+    {"inputs": [{"name": "user", "type": "address"}, {"name": "positionId", "type": "uint256"}, {"name": "sizeWei", "type": "uint256"}, {"name": "strategyId", "type": "uint256"}], "name": "PositionOpened", "type": "event"},
+    {"inputs": [{"name": "user", "type": "address"}, {"name": "positionId", "type": "uint256"}, {"name": "realisedWei", "type": "uint256"}], "name": "PositionClosed", "type": "event"},
+    {"inputs": [{"name": "from", "type": "address"}, {"name": "amount", "type": "uint256"}], "name": "StakeDeposited", "type": "event"},
+    {"inputs": [], "name": "governor", "outputs": [{"name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "treasury", "outputs": [{"name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "vault", "outputs": [{"name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "operator", "outputs": [{"name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "router", "outputs": [{"name": "", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "clawPaused", "outputs": [{"name": "", "type": "bool"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "orderCounter", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "positionCounter", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "genesisBlock", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}], "name": "getOrder", "outputs": [{"name": "tokenIn", "type": "address"}, {"name": "tokenOut", "type": "address"}, {"name": "amountIn", "type": "uint256"}, {"name": "amountOutMin", "type": "uint256"}, {"name": "deadline", "type": "uint256"}, {"name": "filled", "type": "bool"}, {"name": "cancelled", "type": "bool"}, {"name": "placedAtBlock", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "positionId", "type": "uint256"}], "name": "getPosition", "outputs": [{"name": "user", "type": "address"}, {"name": "strategyId", "type": "uint256"}, {"name": "sizeWei", "type": "uint256"}, {"name": "openedAtBlock", "type": "uint256"}, {"name": "entryPriceE8", "type": "uint256"}, {"name": "closed", "type": "bool"}, {"name": "realisedWei", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "strategyId", "type": "uint256"}], "name": "getStrategy", "outputs": [{"name": "allocCapWei", "type": "uint256"}, {"name": "allocUsedWei", "type": "uint256"}, {"name": "tickEpoch", "type": "uint256"}, {"name": "lastTickBlock", "type": "uint256"}, {"name": "sealed", "type": "bool"}, {"name": "active", "type": "bool"}, {"name": "confidenceTier", "type": "uint8"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "getOrderCount", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "getTotalStakedWei", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "user", "type": "address"}], "name": "getUserStakeWei", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "user", "type": "address"}], "name": "getUserPositionCount", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "tokenIn", "type": "address"}, {"name": "tokenOut", "type": "address"}, {"name": "amountIn", "type": "uint256"}, {"name": "amountOutMin", "type": "uint256"}, {"name": "deadline", "type": "uint256"}], "name": "placeOrder", "outputs": [{"name": "orderId", "type": "uint256"}], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}], "name": "executeOrder", "outputs": [{"name": "amountOut", "type": "uint256"}], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [{"name": "orderId", "type": "uint256"}], "name": "cancelOrder", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [], "name": "topTreasury", "outputs": [], "stateMutability": "payable", "type": "function"},
+    {"inputs": [], "name": "depositStake", "outputs": [], "stateMutability": "payable", "type": "function"},
+    {"inputs": [{"name": "amountWei", "type": "uint256"}], "name": "requestWithdrawStake", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [{"name": "strategyId", "type": "uint256"}, {"name": "sizeWei", "type": "uint256"}], "name": "openPosition", "outputs": [{"name": "positionId", "type": "uint256"}], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [{"name": "positionId", "type": "uint256"}, {"name": "realisedWei", "type": "uint256"}], "name": "closePosition", "outputs": [], "stateMutability": "nonpayable", "type": "function"},
+    {"inputs": [], "name": "recordDeposit", "outputs": [{"name": "depositId", "type": "uint256"}], "stateMutability": "payable", "type": "function"},
+    {"inputs": [], "name": "getContractBalance", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "getVaultBalance", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [{"name": "roundId", "type": "uint256"}], "name": "getRound", "outputs": [{"name": "promptDigest", "type": "bytes32"}, {"name": "responseRoot", "type": "bytes32"}, {"name": "startedAt", "type": "uint256"}, {"name": "sealedAt", "type": "uint256"}, {"name": "finalized", "type": "bool"}, {"name": "confidenceTier", "type": "uint8"}, {"name": "proposer", "type": "address"}], "stateMutability": "view", "type": "function"},
+    {"inputs": [], "name": "getRoundCounter", "outputs": [{"name": "", "type": "uint256"}], "stateMutability": "view", "type": "function"},
+]
+
+
+# -----------------------------------------------------------------------------
+# Web3 / Contract client
+# -----------------------------------------------------------------------------
+
+
+class AmiContractClient:
+    """Client for Anna contract; uses Web3 when available."""
+
+    def __init__(self, config: AmiConfig) -> None:
+        self.config = config
+        self._w3: Any = None
+        self._contract: Any = None
+        self._account: Any = None
+        if not HAS_WEB3:
+            get_logger().warning("web3 not installed; only offline/address utilities available.")
+
+    def connect(self) -> bool:
+        if not HAS_WEB3:
+            return False
+        try:
+            self._w3 = Web3(Web3.HTTPProvider(self.config.rpc_url))
+            if not self._w3.is_connected():
+                get_logger().error("RPC not connected: %s", self.config.rpc_url)
+                return False
+            if self.config.contract_address:
+                self._contract = self._w3.eth.contract(
+                    address=Web3.to_checksum_address(self.config.contract_address),
+                    abi=ANNA_ABI,
+                )
+            if self.config.private_key:
+                self._account = self._w3.eth.account.from_key(self.config.private_key)
+            return True
+        except Exception as e:
+            get_logger().exception("Connect failed: %s", e)
+            return False
+
+    @property
+    def w3(self) -> Any:
+        return self._w3
+
+    @property
