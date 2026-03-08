@@ -838,3 +838,108 @@ def main() -> int:
 
     # get-strategy
     p_gs = sub.add_parser("get-strategy", help="Get strategy by ID")
+    p_gs.add_argument("strategy_id", type=int)
+    p_gs.set_defaults(func=cmd_get_strategy)
+    _add_common_args(p_gs)
+
+    # get-round
+    p_gr = sub.add_parser("get-round", help="Get round by ID")
+    p_gr.add_argument("round_id", type=int)
+    p_gr.set_defaults(func=cmd_get_round)
+    _add_common_args(p_gr)
+
+    # deposit-stake
+    p_ds = sub.add_parser("deposit-stake", help="Deposit stake (ETH)")
+    p_ds.add_argument("amount", type=float, help="Amount in ETH")
+    p_ds.set_defaults(func=cmd_deposit_stake)
+    _add_common_args(p_ds)
+
+    # request-withdraw
+    p_rw = sub.add_parser("request-withdraw", help="Request withdraw stake")
+    p_rw.add_argument("amount", type=float, help="Amount in ETH")
+    p_rw.set_defaults(func=cmd_request_withdraw)
+    _add_common_args(p_rw)
+
+    # top-treasury
+    p_tt = sub.add_parser("top-treasury", help="Top up treasury (ETH)")
+    p_tt.add_argument("amount", type=float, help="Amount in ETH")
+    p_tt.set_defaults(func=cmd_top_treasury)
+    _add_common_args(p_tt)
+
+    # open-position
+    p_op = sub.add_parser("open-position", help="Open position")
+    p_op.add_argument("strategy_id", type=int)
+    p_op.add_argument("size", type=float, help="Size in ETH")
+    p_op.set_defaults(func=cmd_open_position)
+    _add_common_args(p_op)
+
+    # close-position
+    p_cp = sub.add_parser("close-position", help="Close position")
+    p_cp.add_argument("position_id", type=int)
+    p_cp.add_argument("realised", type=float, help="Realised amount in ETH")
+    p_cp.set_defaults(func=cmd_close_position)
+    _add_common_args(p_cp)
+
+    # record-deposit
+    p_rd = sub.add_parser("record-deposit", help="Record deposit (ETH)")
+    p_rd.add_argument("amount", type=float, help="Amount in ETH")
+    p_rd.set_defaults(func=cmd_record_deposit)
+    _add_common_args(p_rd)
+
+    # generate-addresses
+    p_ga = sub.add_parser("generate-addresses", help="Generate EIP-55 addresses")
+    p_ga.add_argument("count", type=int, nargs="?", default=8)
+    p_ga.set_defaults(func=cmd_generate_addresses)
+    _add_common_args(p_ga)
+
+    # checksum-address
+    p_ca = sub.add_parser("checksum-address", help="EIP-55 checksum an address")
+    p_ca.add_argument("address", type=str)
+    p_ca.set_defaults(func=cmd_checksum_address)
+    _add_common_args(p_ca)
+
+    # status-json
+    p_sj = sub.add_parser("status-json", help="Status as JSON")
+    p_sj.set_defaults(func=cmd_status_json)
+    _add_common_args(p_sj)
+
+    # list-orders
+    p_lo = sub.add_parser("list-orders", help="List orders in range")
+    p_lo.add_argument("--start", type=int, default=1)
+    p_lo.add_argument("--limit", type=int, default=50)
+    p_lo.set_defaults(func=cmd_list_orders)
+    _add_common_args(p_lo)
+
+    # list-positions
+    p_lp = sub.add_parser("list-positions", help="List positions in range")
+    p_lp.add_argument("--start", type=int, default=1)
+    p_lp.add_argument("--limit", type=int, default=50)
+    p_lp.set_defaults(func=cmd_list_positions)
+    _add_common_args(p_lp)
+
+    # list-strategies
+    p_ls = sub.add_parser("list-strategies", help="List strategies in range")
+    p_ls.add_argument("--start", type=int, default=0)
+    p_ls.add_argument("--limit", type=int, default=20)
+    p_ls.set_defaults(func=cmd_list_strategies)
+    _add_common_args(p_ls)
+
+    # list-rounds
+    p_lr = sub.add_parser("list-rounds", help="List rounds in range")
+    p_lr.add_argument("--start", type=int, default=1)
+    p_lr.add_argument("--limit", type=int, default=50)
+    p_lr.set_defaults(func=cmd_list_rounds)
+    _add_common_args(p_lr)
+
+    # config-show
+    p_csh = sub.add_parser("config-show", help="Show config as JSON")
+    p_csh.set_defaults(func=cmd_config_show)
+    _add_common_args(p_csh)
+
+    # config-set-rpc
+    p_csr = sub.add_parser("config-set-rpc", help="Set RPC URL")
+    p_csr.add_argument("rpc_url", type=str)
+    p_csr.set_defaults(func=cmd_config_set_rpc)
+    _add_common_args(p_csr)
+
+    # config-set-contract
