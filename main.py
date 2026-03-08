@@ -1363,3 +1363,108 @@ def config_set_contract(config_path: str, contract_address: str) -> None:
 def config_set_chain_id(config_path: str, chain_id: int) -> None:
     cfg = AmiConfig.load(config_path)
     cfg.chain_id = chain_id
+    cfg.save(config_path)
+
+
+def config_set_private_key(config_path: str, private_key: str) -> None:
+    cfg = AmiConfig.load(config_path)
+    cfg.private_key = private_key
+    cfg.save(config_path)
+
+
+def config_get_all(config_path: Optional[str] = None) -> Dict[str, Any]:
+    cfg = AmiConfig.load(config_path)
+    d = cfg.to_dict()
+    if cfg.private_key:
+        d["private_key"] = "[REDACTED]"
+    return d
+
+
+def ensure_config_dir() -> str:
+    Path(AMI_CONFIG_DIR).mkdir(parents=True, exist_ok=True)
+    return AMI_CONFIG_DIR
+
+
+def default_config_path() -> str:
+    return AMI_CONFIG_FILE
+
+
+def validate_config(cfg: AmiConfig) -> List[str]:
+    errors: List[str] = []
+    if not cfg.rpc_url or not cfg.rpc_url.startswith(("http://", "https://")):
+        errors.append("rpc_url must be a valid HTTP(S) URL")
+    if cfg.chain_id < 1:
+        errors.append("chain_id must be >= 1")
+    if cfg.gas_limit < 21000:
+        errors.append("gas_limit must be >= 21000")
+    if cfg.contract_address and not AmiValidation.is_valid_address(cfg.contract_address):
+        errors.append("contract_address must be 0x + 40 hex")
+    return errors
+
+
+def run_status_and_return_json(contract_address: str, rpc_url: str) -> Dict[str, Any]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    out: Dict[str, Any] = {"ok": False, "chain_id": 0, "order_count": 0, "position_count": 0, "total_staked_wei": "0", "contract_balance_wei": "0", "vault_balance_wei": "0", "claw_paused": True}
+    if not client.connect():
+        return out
+    out["ok"] = True
+    out["chain_id"] = client.get_chain_id()
+    out["order_count"] = client.get_order_count()
+    if client.contract:
+        try:
+            out["position_count"] = client.contract.functions.positionCounter().call()
+        except Exception:
+            out["position_count"] = 0
+    out["total_staked_wei"] = str(client.get_total_staked_wei())
+    out["contract_balance_wei"] = str(client.get_contract_balance())
+    out["vault_balance_wei"] = str(client.get_vault_balance())
+    out["claw_paused"] = client.get_claw_paused()
+    return out
+
+
+def run_order_count_and_return(contract_address: str, rpc_url: str) -> int:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect() or not client.contract:
+        return 0
+    return client.get_order_count()
+
+
+def run_get_order_json(contract_address: str, rpc_url: str, order_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    o = client.get_order(order_id)
+    if o is None:
+        return None
+    return {k: str(v) for k, v in o.items()}
+
+
+def run_get_position_json(contract_address: str, rpc_url: str, position_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    p = client.get_position(position_id)
+    if p is None:
+        return None
+    return {k: str(v) for k, v in p.items()}
+
+
+def run_get_strategy_json(contract_address: str, rpc_url: str, strategy_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    s = client.get_strategy(strategy_id)
+    if s is None:
+        return None
+    return {k: str(v) for k, v in s.items()}
+
+
+def run_get_round_json(contract_address: str, rpc_url: str, round_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
