@@ -523,3 +523,108 @@ class AmiContractClient:
                 "from": self._account.address,
                 "value": value_wei,
                 "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            return True
+        except Exception as e:
+            get_logger().exception("depositStake failed: %s", e)
+            return False
+
+    def request_withdraw_stake(self, amount_wei: int) -> bool:
+        if not self._contract or not self._account:
+            return False
+        try:
+            tx = self._contract.functions.requestWithdrawStake(amount_wei).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            return True
+        except Exception as e:
+            get_logger().exception("requestWithdrawStake failed: %s", e)
+            return False
+
+    def open_position(self, strategy_id: int, size_wei: int) -> Optional[int]:
+        if not self._contract or not self._account:
+            return None
+        try:
+            tx = self._contract.functions.openPosition(strategy_id, size_wei).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            tx_hash = self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash)
+            logs = self._contract.events.PositionOpened().process_receipt(receipt)
+            if logs:
+                return logs[0]["args"]["positionId"]
+            return None
+        except Exception as e:
+            get_logger().exception("openPosition failed: %s", e)
+            return None
+
+    def close_position(self, position_id: int, realised_wei: int) -> bool:
+        if not self._contract or not self._account:
+            return False
+        try:
+            tx = self._contract.functions.closePosition(position_id, realised_wei).build_transaction({
+                "from": self._account.address,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            return True
+        except Exception as e:
+            get_logger().exception("closePosition failed: %s", e)
+            return False
+
+    def record_deposit(self, value_wei: int) -> Optional[int]:
+        if not self._contract or not self._account:
+            return None
+        try:
+            tx = self._contract.functions.recordDeposit().build_transaction({
+                "from": self._account.address,
+                "value": value_wei,
+                "gas": self.config.gas_limit,
+                "chainId": self.get_chain_id(),
+            })
+            signed = self._account.sign_transaction(tx)
+            tx_hash = self._w3.eth.send_raw_transaction(signed.raw_transaction)
+            receipt = self._w3.eth.wait_for_transaction_receipt(tx_hash)
+            logs = self._contract.events.DepositSwept().process_receipt(receipt)
+            if logs:
+                return logs[0]["args"]["depositId"]
+            return None
+        except Exception as e:
+            get_logger().exception("recordDeposit failed: %s", e)
+            return None
+
+
+# -----------------------------------------------------------------------------
+# Formatting helpers
+# -----------------------------------------------------------------------------
+
+
+def wei_to_ether(wei: int) -> float:
+    return wei / 1e18
+
+
+def ether_to_wei(ether: float) -> int:
+    return int(ether * 1e18)
+
+
+def format_wei(wei: int) -> str:
+    return f"{wei_to_ether(wei):.6f} ETH"
+
+
+def format_address(addr: str) -> str:
+    if len(addr) >= 42:
+        return addr[:10] + "..." + addr[-8:]
+    return addr
+
