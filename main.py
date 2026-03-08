@@ -733,3 +733,108 @@ def cmd_top_treasury(config: AmiConfig, args: argparse.Namespace) -> int:
     client = AmiContractClient(config)
     if not client.connect():
         return 1
+    value_wei = ether_to_wei(args.amount)
+    if client.top_treasury(value_wei):
+        print("Top treasury tx sent.")
+        return 0
+    return 1
+
+
+def cmd_open_position(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
+    size_wei = ether_to_wei(args.size)
+    pid = client.open_position(args.strategy_id, size_wei)
+    if pid is not None:
+        print("Position ID:", pid)
+        return 0
+    return 1
+
+
+def cmd_close_position(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
+    realised_wei = ether_to_wei(args.realised)
+    if client.close_position(args.position_id, realised_wei):
+        print("Close position tx sent.")
+        return 0
+    return 1
+
+
+def cmd_record_deposit(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect():
+        return 1
+    value_wei = ether_to_wei(args.amount)
+    did = client.record_deposit(value_wei)
+    if did is not None:
+        print("Deposit ID:", did)
+        return 0
+    return 1
+
+
+def cmd_generate_addresses(config: AmiConfig, args: argparse.Namespace) -> int:
+    n = getattr(args, "count", 8)
+    addrs = generate_unique_addresses(n)
+    for a in addrs:
+        print(a)
+    return 0
+
+
+def cmd_checksum_address(config: AmiConfig, args: argparse.Namespace) -> int:
+    addr = getattr(args, "address", None) or (args.address if hasattr(args, "address") else None)
+    if not addr:
+        print("Usage: ami checksum-address <0x...>", file=sys.stderr)
+        return 1
+    try:
+        print(to_checksum_address(addr))
+        return 0
+    except Exception as e:
+        print(e, file=sys.stderr)
+        return 1
+
+
+# -----------------------------------------------------------------------------
+# Subparsers and main
+# -----------------------------------------------------------------------------
+
+
+def _add_common_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--config", default=None, help="Config file path")
+    parser.add_argument("--rpc", default=None, help="RPC URL override")
+    parser.add_argument("--contract", default=None, help="Contract address override")
+    parser.add_argument("--verbose", "-v", action="store_true", help="Verbose logging")
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(prog=AMI_APP_NAME, description="Ami — Anna clawbot companion app")
+    parser.add_argument("--version", action="version", version=f"%(prog)s {AMI_VERSION}")
+    _add_common_args(parser)
+    sub = parser.add_subparsers(dest="command", help="Commands")
+
+    # status
+    p_status = sub.add_parser("status", help="Show contract status")
+    p_status.set_defaults(func=cmd_status)
+    _add_common_args(p_status)
+
+    # order-count
+    p_oc = sub.add_parser("order-count", help="Get order count")
+    p_oc.set_defaults(func=cmd_order_count)
+    _add_common_args(p_oc)
+
+    # get-order
+    p_go = sub.add_parser("get-order", help="Get order by ID")
+    p_go.add_argument("order_id", type=int)
+    p_go.set_defaults(func=cmd_get_order)
+    _add_common_args(p_go)
+
+    # get-position
+    p_gp = sub.add_parser("get-position", help="Get position by ID")
+    p_gp.add_argument("position_id", type=int)
+    p_gp.set_defaults(func=cmd_get_position)
+    _add_common_args(p_gp)
+
+    # get-strategy
+    p_gs = sub.add_parser("get-strategy", help="Get strategy by ID")
