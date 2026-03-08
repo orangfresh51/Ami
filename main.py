@@ -1468,3 +1468,108 @@ def run_get_round_json(contract_address: str, rpc_url: str, round_id: int) -> Op
     cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
     client = AmiContractClient(cfg)
     if not client.connect():
+        return None
+    r = client.get_round(round_id)
+    if r is None:
+        return None
+    return r
+
+
+def print_status_json(contract_address: str, rpc_url: str) -> None:
+    print(json.dumps(run_status_and_return_json(contract_address, rpc_url), indent=2))
+
+
+def print_order_json(contract_address: str, rpc_url: str, order_id: int) -> None:
+    o = run_get_order_json(contract_address, rpc_url, order_id)
+    print(json.dumps(o, indent=2) if o is not None else "null")
+
+
+def print_position_json(contract_address: str, rpc_url: str, position_id: int) -> None:
+    p = run_get_position_json(contract_address, rpc_url, position_id)
+    print(json.dumps(p, indent=2) if p is not None else "null")
+
+
+def print_strategy_json(contract_address: str, rpc_url: str, strategy_id: int) -> None:
+    s = run_get_strategy_json(contract_address, rpc_url, strategy_id)
+    print(json.dumps(s, indent=2) if s is not None else "null")
+
+
+def print_round_json(contract_address: str, rpc_url: str, round_id: int) -> None:
+    r = run_get_round_json(contract_address, rpc_url, round_id)
+    print(json.dumps(r, indent=2) if r is not None else "null")
+
+
+def cmd_status_json(config: AmiConfig, _args: argparse.Namespace) -> int:
+    addr = config.contract_address or ""
+    rpc = config.rpc_url or AMI_DEFAULT_RPC
+    if not addr:
+        print(json.dumps({"ok": False, "error": "contract_address not set"}))
+        return 1
+    print(json.dumps(run_status_and_return_json(addr, rpc), indent=2))
+    return 0
+
+
+def cmd_list_orders(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        print("[]")
+        return 1
+    end = client.get_order_count()
+    start = getattr(args, "start", 1)
+    limit = getattr(args, "limit", 50)
+    start = max(1, min(start, end))
+    limit = min(limit, end - start + 1)
+    orders_list = list_orders_range(config.contract_address or "", config.rpc_url, start, start + limit - 1)
+    print(json.dumps(orders_list, indent=2))
+    return 0
+
+
+def cmd_list_positions(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        print("[]")
+        return 1
+    try:
+        end = client.contract.functions.positionCounter().call()
+    except Exception:
+        end = 0
+    start = getattr(args, "start", 1)
+    limit = getattr(args, "limit", 50)
+    start = max(1, min(start, end))
+    limit = min(limit, max(0, end - start + 1))
+    if limit <= 0:
+        print("[]")
+        return 0
+    positions_list = list_positions_range(config.contract_address or "", config.rpc_url, start, start + limit - 1)
+    print(json.dumps(positions_list, indent=2))
+    return 0
+
+
+def cmd_list_strategies(config: AmiConfig, args: argparse.Namespace) -> int:
+    addr = config.contract_address or ""
+    if not addr:
+        print("[]")
+        return 1
+    start = getattr(args, "start", 0)
+    limit = getattr(args, "limit", 20)
+    strategies_list = list_strategies_range(addr, config.rpc_url, start, start + limit - 1)
+    print(json.dumps(strategies_list, indent=2))
+    return 0
+
+
+def cmd_list_rounds(config: AmiConfig, args: argparse.Namespace) -> int:
+    client = AmiContractClient(config)
+    if not client.connect() or not client.contract:
+        print("[]")
+        return 1
+    try:
+        end = client.contract.functions.getRoundCounter().call()
+    except Exception:
+        end = 0
+    start = getattr(args, "start", 1)
+    limit = getattr(args, "limit", 50)
+    start = max(1, min(start, end))
+    limit = min(limit, max(0, end - start + 1))
+    if limit <= 0:
+        print("[]")
+        return 0
