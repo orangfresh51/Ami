@@ -943,3 +943,108 @@ def main() -> int:
     _add_common_args(p_csr)
 
     # config-set-contract
+    p_csc = sub.add_parser("config-set-contract", help="Set contract address")
+    p_csc.add_argument("contract_address", type=str)
+    p_csc.set_defaults(func=cmd_config_set_contract)
+    _add_common_args(p_csc)
+
+    # validate-address
+    p_va = sub.add_parser("validate-address", help="Validate and optionally checksum address")
+    p_va.add_argument("address", type=str)
+    p_va.set_defaults(func=cmd_validate_address)
+    _add_common_args(p_va)
+
+    # compute-deadline
+    p_cd = sub.add_parser("compute-deadline", help="Unix deadline from now (minutes)")
+    p_cd.add_argument("--minutes", type=int, default=30)
+    p_cd.set_defaults(func=cmd_compute_deadline)
+    _add_common_args(p_cd)
+
+    # compute-slippage-min
+    p_csm = sub.add_parser("compute-slippage-min", help="Min amount out given slippage bps")
+    p_csm.add_argument("amount_out", type=int)
+    p_csm.add_argument("--slippage-bps", type=int, default=AMI_DEFAULT_SLIPPAGE_BPS)
+    p_csm.set_defaults(func=cmd_compute_slippage_min)
+    _add_common_args(p_csm)
+
+    # ether-to-wei
+    p_ew = sub.add_parser("ether-to-wei", help="Convert ETH to wei")
+    p_ew.add_argument("eth", type=float)
+    p_ew.set_defaults(func=cmd_ether_to_wei)
+    _add_common_args(p_ew)
+
+    # wei-to-ether
+    p_we = sub.add_parser("wei-to-ether", help="Convert wei to ETH")
+    p_we.add_argument("wei", type=int)
+    p_we.set_defaults(func=cmd_wei_to_ether)
+    _add_common_args(p_we)
+
+    args = parser.parse_args()
+    config = AmiConfig.load(args.config) if hasattr(args, "config") and args.config else AmiConfig.load()
+    if hasattr(args, "rpc") and args.rpc:
+        config.rpc_url = args.rpc
+    if hasattr(args, "contract") and args.contract:
+        config.contract_address = args.contract
+    if hasattr(args, "verbose") and args.verbose:
+        set_verbose(True)
+
+    if not getattr(args, "command", None) or not hasattr(args, "func"):
+        parser.print_help()
+        return 0
+    return args.func(config, args)
+
+
+# -----------------------------------------------------------------------------
+# Programmatic API (single-file export)
+# -----------------------------------------------------------------------------
+
+def get_config(path: Optional[str] = None) -> AmiConfig:
+    return AmiConfig.load(path)
+
+
+def get_client(config: Optional[AmiConfig] = None) -> AmiContractClient:
+    cfg = config or get_config()
+    c = AmiContractClient(cfg)
+    c.connect()
+    return c
+
+
+def query_order(contract_address: str, rpc_url: str, order_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    return client.get_order(order_id)
+
+
+def query_position(contract_address: str, rpc_url: str, position_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    return client.get_position(position_id)
+
+
+def query_strategy(contract_address: str, rpc_url: str, strategy_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    return client.get_strategy(strategy_id)
+
+
+def query_round(contract_address: str, rpc_url: str, round_id: int) -> Optional[Dict[str, Any]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return None
+    return client.get_round(round_id)
+
+
+def query_total_staked(contract_address: str, rpc_url: str) -> int:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    if not client.connect():
+        return 0
+    return client.get_total_staked_wei()
+
