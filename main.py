@@ -1258,3 +1258,108 @@ def parse_wei(s: str) -> int:
 def parse_ether(s: str) -> int:
     """Parse ETH amount string to wei."""
     return ether_to_wei(float(s))
+
+
+def safe_get_order(client: AmiContractClient, order_id: int) -> Optional[Dict[str, Any]]:
+    for _ in range(AMI_MAX_RETRIES):
+        try:
+            return client.get_order(order_id)
+        except Exception:
+            time.sleep(AMI_RETRY_DELAY_SEC)
+    return None
+
+
+def safe_get_position(client: AmiContractClient, position_id: int) -> Optional[Dict[str, Any]]:
+    for _ in range(AMI_MAX_RETRIES):
+        try:
+            return client.get_position(position_id)
+        except Exception:
+            time.sleep(AMI_RETRY_DELAY_SEC)
+    return None
+
+
+def safe_get_strategy(client: AmiContractClient, strategy_id: int) -> Optional[Dict[str, Any]]:
+    for _ in range(AMI_MAX_RETRIES):
+        try:
+            return client.get_strategy(strategy_id)
+        except Exception:
+            time.sleep(AMI_RETRY_DELAY_SEC)
+    return None
+
+
+def safe_get_round(client: AmiContractClient, round_id: int) -> Optional[Dict[str, Any]]:
+    for _ in range(AMI_MAX_RETRIES):
+        try:
+            return client.get_round(round_id)
+        except Exception:
+            time.sleep(AMI_RETRY_DELAY_SEC)
+    return None
+
+
+def batch_query_orders(contract_address: str, rpc_url: str, order_ids: List[int]) -> Dict[int, Optional[Dict[str, Any]]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    result: Dict[int, Optional[Dict[str, Any]]] = {}
+    if not client.connect():
+        for oid in order_ids:
+            result[oid] = None
+        return result
+    for oid in order_ids:
+        result[oid] = client.get_order(oid)
+    return result
+
+
+def batch_query_positions(contract_address: str, rpc_url: str, position_ids: List[int]) -> Dict[int, Optional[Dict[str, Any]]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    result: Dict[int, Optional[Dict[str, Any]]] = {}
+    if not client.connect():
+        for pid in position_ids:
+            result[pid] = None
+        return result
+    for pid in position_ids:
+        result[pid] = client.get_position(pid)
+    return result
+
+
+def batch_query_strategies(contract_address: str, rpc_url: str, strategy_ids: List[int]) -> Dict[int, Optional[Dict[str, Any]]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    result: Dict[int, Optional[Dict[str, Any]]] = {}
+    if not client.connect():
+        for sid in strategy_ids:
+            result[sid] = None
+        return result
+    for sid in strategy_ids:
+        result[sid] = client.get_strategy(sid)
+    return result
+
+
+def batch_query_rounds(contract_address: str, rpc_url: str, round_ids: List[int]) -> Dict[int, Optional[Dict[str, Any]]]:
+    cfg = AmiConfig(rpc_url=rpc_url, contract_address=contract_address)
+    client = AmiContractClient(cfg)
+    result: Dict[int, Optional[Dict[str, Any]]] = {}
+    if not client.connect():
+        for rid in round_ids:
+            result[rid] = None
+        return result
+    for rid in round_ids:
+        result[rid] = client.get_round(rid)
+    return result
+
+
+def config_set_rpc(config_path: str, rpc_url: str) -> None:
+    cfg = AmiConfig.load(config_path)
+    cfg.rpc_url = rpc_url
+    cfg.save(config_path)
+
+
+def config_set_contract(config_path: str, contract_address: str) -> None:
+    cfg = AmiConfig.load(config_path)
+    cfg.contract_address = contract_address
+    cfg.save(config_path)
+
+
+def config_set_chain_id(config_path: str, chain_id: int) -> None:
+    cfg = AmiConfig.load(config_path)
+    cfg.chain_id = chain_id
